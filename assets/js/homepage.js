@@ -87,4 +87,3 @@ var displayRepos = function(repos, searchTerm) {
   }
 }
 
-// getUserRepos();
