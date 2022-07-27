@@ -2,6 +2,7 @@ var userFormEl = document.querySelector("#user-form")
 var nameInputEl = document.querySelector("#username")
 var repoContainerEl = document.querySelector("#repos-container")
 var repoSearchTerm = document.querySelector("#repo-search-term")
+var languageButtonsEl = document.querySelector("#language-buttons")
 
 var formSubmitHandler = function(event) {
   event.preventDefault()
@@ -11,6 +12,7 @@ var formSubmitHandler = function(event) {
   if (username) {
     getUserRepos(username)
     // clear the input field
+    repoContainerEl.textContent = "";
     nameInputEl.value = ""
     // if button is pressed without input value, give an alert
   } else {
@@ -18,7 +20,18 @@ var formSubmitHandler = function(event) {
   }
 }
 
-userFormEl.addEventListener("submit", formSubmitHandler)
+var buttonClickHandler = function(event) {
+  // get the language attribute from the clicked element
+  var language = event.target.getAttribute("data-language")
+    console.log(language);
+    
+    if (language) {
+      getFeaturedRepos(language)
+    }
+
+    // clear old content
+    repoContainerEl.textContent = ""
+}
 
 var getUserRepos = function (user) {
   // format the github api url
@@ -28,6 +41,7 @@ var getUserRepos = function (user) {
   fetch(apiUrl).then(function (response){
     // request was successful
     if (response.ok) {
+      console.log(response);
       response.json().then(function(data) {
         displayRepos(data, user)
       })
@@ -41,17 +55,33 @@ var getUserRepos = function (user) {
   })
 };
 
+var getFeaturedRepos = function(language) {
+  // format the github api url
+  var apiUrl = "https://github.com/search/repositories/q=" + language + "+is:featured&sort=help-wanted-issues";
+  
+  // make a get request to url
+  fetch(apiUrl).then(function(response) {
+    if (response.ok) {
+      response.json().then(function(data) {
+        displayRepos(data.items, language);
+      })
+    } else {
+      alert("Error: " + response.statusText)
+    }
+  })
+}
+
 var displayRepos = function(repos, searchTerm) {
   // check if api returned any repos
   if (repos.length === 0) {
     repoContainerEl.textContent = "No repositories found"
     return
   }
-  console.log(repos);
-  console.log(searchTerm);
+  
   // clear old content
   repoContainerEl.textContent = "";
   repoSearchTerm.textContent = searchTerm;
+
   // loop over repos
   for (var i = 0; i < repos.length; i++) {
     // format repo name
@@ -61,6 +91,7 @@ var displayRepos = function(repos, searchTerm) {
     var repoEl = document.createElement("a")
     repoEl.classList = "list-item flex-row justify-space-between align-center"
     repoEl.setAttribute("href", "./single-repo.html?repo=" + repoName)
+
     // create a span element to hold repository name
     var titleEl = document.createElement("span")
     titleEl.textContent = repoName
@@ -87,3 +118,6 @@ var displayRepos = function(repos, searchTerm) {
   }
 }
 
+userFormEl.addEventListener("submit", formSubmitHandler)
+// delegate click handling on button elements to their parent elements
+languageButtonsEl.addEventListener("click", buttonClickHandler);
